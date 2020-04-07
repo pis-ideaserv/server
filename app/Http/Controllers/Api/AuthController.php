@@ -36,7 +36,7 @@ class AuthController extends Controller
         return response()->json(
         	[
         		'status' 	=> 	false,
-        		'message'	=>	'An Error has occured! Unauthenticated.',
+        		'message'	=>	'Credentials does not exist.',
         	]
         	,Status::HTTP_UNAUTHORIZED
     	);
