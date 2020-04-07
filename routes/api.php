@@ -30,10 +30,10 @@ Route::group(['namespace' => 'Api'], function () {
             ]
         );
 
-        Route::post('check',
+        Route::get('me',
             [
-                'as'            =>  'api.auth.check',
-                'uses'          =>  'AuthController@check',
+                'as'            =>  'api.auth.me',
+                'uses'          =>  'AuthController@me',
                 'middleware'    =>  'jwt'
             ]
         );

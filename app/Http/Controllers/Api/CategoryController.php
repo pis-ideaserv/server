@@ -43,16 +43,20 @@ class CategoryController extends Controller
 		if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
 
         $la = Category::where('name','=',$request->name)->get();
 
         if(sizeof($la) != 0){
-            return response()->json(['message' => 'Category name exists'], Status::HTTP_NOT_ACCEPTABLE);
+            return [
+                "status"    => false,
+                'message'   => 'Category name exists'
+            ];
         }
 
 
@@ -60,9 +64,9 @@ class CategoryController extends Controller
         $cat->name = $request->name;
         $cat->save();
 
-        return response()->json([
+        return [
             "message" => 'Product category successfully created'
-        ]);
+        ];
 
     }
 
@@ -80,9 +84,10 @@ class CategoryController extends Controller
 		if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
         
@@ -99,13 +104,19 @@ class CategoryController extends Controller
     	$category = Category::find($id);
 
         if($category == null){
-            return response()->json(['message' => 'Product category not found'], Status::HTTP_NOT_FOUND);
+            return [
+                "status" => false,
+                'message' => 'Product category not found'
+            ];
         }
 
         try{
         	$category->delete();	
         }catch(\Illuminate\Database\QueryException $e){
-        	return response()->json(['message' => 'Cannot delete, currently linked'], Status::HTTP_METHOD_NOT_ALLOWED);
+        	return [
+                "status"    => false,
+                'message'   => 'Cannot delete, currently linked'
+            ];
         }
         
 

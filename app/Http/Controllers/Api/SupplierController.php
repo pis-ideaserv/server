@@ -28,9 +28,10 @@ class SupplierController extends Controller
             $filt = json_decode(stripslashes($request->filter));
 
             if(!is_object($filt)){
-                return response()->json([
+                return [
+                    "status" => false,
                     "errors" => "Filter must be an object"
-                ],Status::HTTP_NOT_ACCEPTABLE);
+                ];
             }
 
             $filter = [
@@ -74,12 +75,9 @@ class SupplierController extends Controller
 
             
             $supplier = Supplier::where($where);
-
-            if($request->per_page != null){
-                $per_page = (int)$request->per_page;
-                return SupplierResource::collection($supplier->paginate($per_page));
-            }
-            return SupplierResource::collection($supplier->paginate(10));
+            $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+            
+            return SupplierResource::collection($supplier->paginate($per_page));
         }
 
         if($request->search){
@@ -89,11 +87,9 @@ class SupplierController extends Controller
                 return SupplierResource::collection($query);
         }
 
-        if($request->per_page != null){
-            $per_page = (int)$request->per_page;
-            return SupplierResource::collection(Supplier::paginate($per_page));
-        }
-        return SupplierResource::collection(Supplier::paginate(10));
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+
+        return SupplierResource::collection(Supplier::paginate($per_page));
     }
 
     public function show($id){
@@ -101,7 +97,7 @@ class SupplierController extends Controller
     }
 
     public function store(Request $request){
-        if(!$request->hasFile('file')){
+        // if(!$request->hasFile('file')){
             $validator = Validator::make($request->all(), [
                 'supplier_code'                 =>  'required|unique:supplier,supplier_code',
                 'supplier_name'                 =>  'required',
@@ -115,9 +111,10 @@ class SupplierController extends Controller
             if ($validator->fails()){
                 $a = $validator->errors()->toArray();
 
-                return response()->json([
+                return [
+                    "status" => false,
                     "errors" => Utils::RemakeArray($a)
-                ],Status::HTTP_NOT_ACCEPTABLE);
+                ];
             }
 
             $supplier = new Supplier();
@@ -138,149 +135,149 @@ class SupplierController extends Controller
             return response()->json([
                 "message" => "Supplier successfully created",
             ]);
-        }else{
+        // }else{
 
-            ini_set('max_execution_time', 0);
-
-
-            $column = 7;
-            $array = [];   
-
-            $validator = Validator::make($request->all(),[
-                'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
-            ]);
-
-            if ($validator->fails()){
-                $a = $validator->errors()->toArray();
-
-                return response()->json([
-                    "errors" => Utils::RemakeArray($a)
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
+        //     ini_set('max_execution_time', 0);
 
 
-            //process excel
-            $a = (new ExcelSheet)->toCollection($request->file('file'));
+        //     $column = 7;
+        //     $array = [];   
 
-            // dd($a->get(0));
+        //     $validator = Validator::make($request->all(),[
+        //         'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
+        //     ]);
+
+        //     if ($validator->fails()){
+        //         $a = $validator->errors()->toArray();
+
+        //         return response()->json([
+        //             "errors" => Utils::RemakeArray($a)
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
+
+
+        //     //process excel
+        //     $a = (new ExcelSheet)->toCollection($request->file('file'));
+
+        //     // dd($a->get(0));
 
             
 
-            //check sheet if empty
-            if(sizeof($a->toArray()[0]) < 2){
-                return response()->json([
-                    'errors' => [
-                        "message" => "Sheet file is empty!!",
-                    ]
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
+        //     //check sheet if empty
+        //     if(sizeof($a->toArray()[0]) < 2){
+        //         return response()->json([
+        //             'errors' => [
+        //                 "message" => "Sheet file is empty!!",
+        //             ]
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
 
-            //check column format
-            for($i=1;$i<sizeof($a->toArray()[0]);$i++){
+        //     //check column format
+        //     for($i=1;$i<sizeof($a->toArray()[0]);$i++){
 
-                $row = $a->toArray()[0][$i];
+        //         $row = $a->toArray()[0][$i];
                 
-                for($y=0;$y<sizeof($row);$y++){
-                    if($y+1 > $column && $row[$y] != null){
-                        return response()->json([
-                            'errors' => [
-                                "message" => "Sheet column format is invalid!!",
-                            ]   
-                        ],Status::HTTP_NOT_ACCEPTABLE);
-                    }
-                }
+        //         for($y=0;$y<sizeof($row);$y++){
+        //             if($y+1 > $column && $row[$y] != null){
+        //                 return response()->json([
+        //                     'errors' => [
+        //                         "message" => "Sheet column format is invalid!!",
+        //                     ]   
+        //                 ],Status::HTTP_NOT_ACCEPTABLE);
+        //             }
+        //         }
 
 
-                //this is the end of loop if all column in a row is null
-                if($row[0] == null && $row[1] == null && $row[2] == null && $row[3] == null && $row[4] == null && $row[5] == null && $row[6] == null){
-                    break;
-                }
+        //         //this is the end of loop if all column in a row is null
+        //         if($row[0] == null && $row[1] == null && $row[2] == null && $row[3] == null && $row[4] == null && $row[5] == null && $row[6] == null){
+        //             break;
+        //         }
 
-                //if true file is valid
-                if($row[0] != null && $row[1] != null && $row[2] != null 
-                    // && $row[3] != null /*tin*/ 
-                    && $row[4] != null && $row[5] != null && $row[6] != null){
+        //         //if true file is valid
+        //         if($row[0] != null && $row[1] != null && $row[2] != null 
+        //             // && $row[3] != null /*tin*/ 
+        //             && $row[4] != null && $row[5] != null && $row[6] != null){
 
-                    array_push($array,[
-                        'supplier_code'  => $row[0],
-                        'supplier_name'  => $row[1],
-                        'address'        => $row[2],
-                        'tin'            => $row[3],
-                        'contact_person' => $row[4],
-                        'contact_number' => $row[5],
-                        'email'          => $row[6],
-                    ]);
-                    continue;
-                }
+        //             array_push($array,[
+        //                 'supplier_code'  => $row[0],
+        //                 'supplier_name'  => $row[1],
+        //                 'address'        => $row[2],
+        //                 'tin'            => $row[3],
+        //                 'contact_person' => $row[4],
+        //                 'contact_number' => $row[5],
+        //                 'email'          => $row[6],
+        //             ]);
+        //             continue;
+        //         }
 
-                return response()->json([
-                    'errors' => [
-                        "message" => "Sheet column format is invalid!!",
-                    ]   
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
+        //         return response()->json([
+        //             'errors' => [
+        //                 "message" => "Sheet column format is invalid!!",
+        //             ]   
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
 
 
-            $error = [];
-            $success = [];
+        //     $error = [];
+        //     $success = [];
 
-            foreach ($array as $sheet) {
+        //     foreach ($array as $sheet) {
 
-                $supplier = Supplier::where('supplier_code','=',$sheet['supplier_code'])->get();
+        //         $supplier = Supplier::where('supplier_code','=',$sheet['supplier_code'])->get();
 
-                if(sizeof($supplier) != 0){
-                    array_push($error, [
-                        'data'      => [
-                            'supplier_code'      => $sheet['supplier_code'],
-                            'supplier_name'      => $sheet['supplier_name'],
-                            'address'            => $sheet['address'],
-                            'tin'                => $sheet['tin'],
-                            'contact_person'     => $sheet['contact_person'],
-                            'contact_number'     => $sheet['contact_number'],
-                            'email'              => $sheet['email']
-                        ],
-                        'message'   => 'Supplier code '. $sheet['supplier_code'] .' already exist!!!',
-                    ]);
-                    continue;
-                }
+        //         if(sizeof($supplier) != 0){
+        //             array_push($error, [
+        //                 'data'      => [
+        //                     'supplier_code'      => $sheet['supplier_code'],
+        //                     'supplier_name'      => $sheet['supplier_name'],
+        //                     'address'            => $sheet['address'],
+        //                     'tin'                => $sheet['tin'],
+        //                     'contact_person'     => $sheet['contact_person'],
+        //                     'contact_number'     => $sheet['contact_number'],
+        //                     'email'              => $sheet['email']
+        //                 ],
+        //                 'message'   => 'Supplier code '. $sheet['supplier_code'] .' already exist!!!',
+        //             ]);
+        //             continue;
+        //         }
 
-                $supplier = new Supplier();
-                $supplier->supplier_code    =   $sheet['supplier_code'];
-                $supplier->supplier_name    =   $sheet['supplier_name'];
-                $supplier->address          =   $sheet['address'];
+        //         $supplier = new Supplier();
+        //         $supplier->supplier_code    =   $sheet['supplier_code'];
+        //         $supplier->supplier_name    =   $sheet['supplier_name'];
+        //         $supplier->address          =   $sheet['address'];
                 
 
-                // $supplier->tin              =   $sheet['tin'];
+        //         // $supplier->tin              =   $sheet['tin'];
 
-                if($sheet['tin'] != null ){
-                    $supplier->tin              =   $sheet['tin'];
-                }
+        //         if($sheet['tin'] != null ){
+        //             $supplier->tin              =   $sheet['tin'];
+        //         }
 
 
-                $supplier->contact_person   =   $sheet['contact_person'];
-                $supplier->contact_number   =   $sheet['contact_number'];
-                $supplier->email            =   $sheet['email'];
-                $supplier->save();
+        //         $supplier->contact_person   =   $sheet['contact_person'];
+        //         $supplier->contact_number   =   $sheet['contact_number'];
+        //         $supplier->email            =   $sheet['email'];
+        //         $supplier->save();
 
-                array_push($success, 
-                    [
-                        'supplier_code'      => $sheet['supplier_code'],
-                        'supplier_name'      => $sheet['supplier_name'],
-                        'address'            => $sheet['address'],
-                        'tin'                => $sheet['tin'],
-                        'contact_person'     => $sheet['contact_person'],
-                        'contact_number'     => $sheet['contact_number'],
-                        'email'              => $sheet['email'],
-                    ]
-                );
-            }
+        //         array_push($success, 
+        //             [
+        //                 'supplier_code'      => $sheet['supplier_code'],
+        //                 'supplier_name'      => $sheet['supplier_name'],
+        //                 'address'            => $sheet['address'],
+        //                 'tin'                => $sheet['tin'],
+        //                 'contact_person'     => $sheet['contact_person'],
+        //                 'contact_number'     => $sheet['contact_number'],
+        //                 'email'              => $sheet['email'],
+        //             ]
+        //         );
+        //     }
 
-            return response()->json([
-                    'errors' => $error,
-                    'success'=> $success
-            ]);
+        //     return response()->json([
+        //             'errors' => $error,
+        //             'success'=> $success
+        //     ]);
 
-        }
+        // }
     }
 
     public function update(Request $request,$id){
@@ -288,7 +285,10 @@ class SupplierController extends Controller
         $supplier = Supplier::find($id);
 
         if($supplier == null){
-            return response()->json(['message' => 'Supplier not found'], Status::HTTP_NOT_FOUND);
+            return [
+                'status'  => false,
+                'message' => 'Supplier not found'
+            ];
         }
 
         $validator = Validator::make($request->all(), [
@@ -304,9 +304,10 @@ class SupplierController extends Controller
         if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
         $supplier->supplier_code    =   $request->supplier_code;
@@ -322,9 +323,9 @@ class SupplierController extends Controller
         $supplier->email            =   $request->email;
         $supplier->save();
 
-        return response()->json([
+        return [
             "message" => "Supplier successfully updated",
-        ]);
+        ];
 
     }
 
@@ -333,13 +334,19 @@ class SupplierController extends Controller
         $supplier = Supplier::find($id);
 
         if($supplier == null){
-            return response()->json(['message' => 'Supplier not found'], Status::HTTP_NOT_FOUND);
+            return [
+                'status'  => false,
+                'message' => 'Supplier not found'
+            ];
         }
 
         try{
             $supplier->delete();    
         }catch(\Illuminate\Database\QueryException $e){
-            return response()->json(['message' => 'Cannot delete, currently linked'], Status::HTTP_METHOD_NOT_ALLOWED);
+            return [
+                'status'  => false,
+                'message' => 'Cannot delete, currently linked'
+            ];
         }
         return response()->json([
             "message" => 'Supplier successfully deleted'

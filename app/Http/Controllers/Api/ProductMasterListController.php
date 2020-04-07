@@ -21,9 +21,10 @@ class ProductMasterListController extends Controller
             $filt = json_decode($request->filter);
 
             if(!is_object($filt)){
-                return response()->json([
+                return [
+                    "status" => false,
                     "errors" => "Filter must be an object"
-                ],Status::HTTP_NOT_ACCEPTABLE);
+                ];
             }
 
             $filter = [
@@ -85,32 +86,16 @@ class ProductMasterListController extends Controller
                 }
             }
 
+            $per_page = $request->per_page != null ? (int)$request->per_page : 10;
 
 
-
-            if($request->per_page != null) {
-                $per_page = (int)$request->per_page;
-
-                return PMF::collection(
-                    PF::select('product_master_list.*')
-                        ->leftJoin('category as cat','product_master_list.category','=','cat.id')
-                        ->where($where)
-                        ->orderBy('product_master_list.updated_at', 'desc')
-                        ->paginate($per_page)
-                );
-
-            }else{
-
-
-                return PMF::collection(
-                    PF::select('product_master_list.*')
-                        ->leftJoin('category as cat','product_master_list.category','=','cat.id')
-                        ->where($where)
-                        ->orderBy('product_master_list.updated_at', 'desc')
-                        ->paginate(10)
-                ); 
-            }
-
+            return PMF::collection(
+                PF::select('product_master_list.*')
+                    ->leftJoin('category as cat','product_master_list.category','=','cat.id')
+                    ->where($where)
+                    ->orderBy('product_master_list.updated_at', 'desc')
+                    ->paginate($per_page)
+            );
         }
 
         if($request->search){
@@ -135,7 +120,7 @@ class ProductMasterListController extends Controller
     }
 
     public function store(Request $request){
-    	if(!$request->hasFile('file')){
+    	// if(!$request->hasFile('file')){
     		$validator = Validator::make($request->all(), [
                 'product_code'                 	=>  'required|unique:product_master_list,product_code',
                 'product_name'                  =>  'required',
@@ -145,9 +130,10 @@ class ProductMasterListController extends Controller
     		if ($validator->fails()){
                 $a = $validator->errors()->toArray();
 
-                return response()->json([
+                return [
+                    "status" => false,
                     "errors" => Utils::RemakeArray($a)
-                ],Status::HTTP_NOT_ACCEPTABLE);
+                ];
             }
 
 
@@ -161,139 +147,139 @@ class ProductMasterListController extends Controller
                 "message" => "Product Master List successfully created",
             ]);
 
-    	}else{
-            ini_set('max_execution_time', 0);
+    	// }else{
+        //     ini_set('max_execution_time', 0);
             
-            $column = 3;
-            $array = [];
+        //     $column = 3;
+        //     $array = [];
 
-            $validator = Validator::make($request->all(),[
-                'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
-            ]);
+        //     $validator = Validator::make($request->all(),[
+        //         'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
+        //     ]);
 
-            if ($validator->fails()){
-                $a = $validator->errors()->toArray();
+        //     if ($validator->fails()){
+        //         $a = $validator->errors()->toArray();
 
-                return response()->json([
-                    "errors" => Utils::RemakeArray($a)
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
-
-
-            //process excel
-            $a = (new ExcelSheet)->toCollection($request->file('file'));
-
-            //check format if empty
-            if(sizeof($a->toArray()[0]) < 2){
-                return response()->json([
-                    'errors' => [
-                        "message" => "Sheet file is empty!!",
-                    ]
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
+        //         return response()->json([
+        //             "errors" => Utils::RemakeArray($a)
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
 
 
-            //check column format
-            for($i=1;$i<sizeof($a->toArray()[0]);$i++){
+        //     //process excel
+        //     $a = (new ExcelSheet)->toCollection($request->file('file'));
 
-                $row = $a->toArray()[0][$i];
+        //     //check format if empty
+        //     if(sizeof($a->toArray()[0]) < 2){
+        //         return response()->json([
+        //             'errors' => [
+        //                 "message" => "Sheet file is empty!!",
+        //             ]
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
+
+
+        //     //check column format
+        //     for($i=1;$i<sizeof($a->toArray()[0]);$i++){
+
+        //         $row = $a->toArray()[0][$i];
                 
-                for($y=0;$y<sizeof($row);$y++){
-                    if($y+1 > $column && $row[$y] != null){
-                        return response()->json([
-                            'errors' => [
-                                "message" => "Sheet column format is invalid!!",
-                            ]   
-                        ],Status::HTTP_NOT_ACCEPTABLE);
-                    }
-                }
+        //         for($y=0;$y<sizeof($row);$y++){
+        //             if($y+1 > $column && $row[$y] != null){
+        //                 return response()->json([
+        //                     'errors' => [
+        //                         "message" => "Sheet column format is invalid!!",
+        //                     ]   
+        //                 ],Status::HTTP_NOT_ACCEPTABLE);
+        //             }
+        //         }
 
 
-                //this is the end of loop if all column in a row is null
-                if($row[0] == null && $row[1] == null && $row[2] == null){
-                    break;
-                }
+        //         //this is the end of loop if all column in a row is null
+        //         if($row[0] == null && $row[1] == null && $row[2] == null){
+        //             break;
+        //         }
 
-                //if true file is valid
-                if( $row[0] != null && $row[1] != null && $row[2] != null){
+        //         //if true file is valid
+        //         if( $row[0] != null && $row[1] != null && $row[2] != null){
 
-                    array_push($array,[
-                        'product_code'      => $row[0],
-                        'product_name'      => $row[1],
-                        'category'          => $row[2],
-                    ]);
-                    continue;
-                }
+        //             array_push($array,[
+        //                 'product_code'      => $row[0],
+        //                 'product_name'      => $row[1],
+        //                 'category'          => $row[2],
+        //             ]);
+        //             continue;
+        //         }
 
-                return response()->json([
-                    'errors' => [
-                        "message" => "Sheet column format is invalid!!",
-                    ]   
-                ],Status::HTTP_NOT_ACCEPTABLE);
-            }
-
-
-            // dd($array);
-            //save it
-
-            $error = [];
-            $success = [];
-
-            foreach ($array as $sheet) {
-
-                //check for existinf product code
-                $product_code = PF::where('product_code','=',$sheet['product_code'])->get();
-
-                if(sizeof($product_code) != 0){
-                    array_push($error, [
-                        'data'      => [
-                            'product_code'                  => $sheet['product_code'],
-                            'product_name'                  => $sheet['product_name'],
-                            'category'                  => $sheet['category'],
-                        ],
-                        'message'   => 'Product code '. $sheet['product_code'] .' already exist!!!',
-                    ]);
-                    continue;
-                }
+        //         return response()->json([
+        //             'errors' => [
+        //                 "message" => "Sheet column format is invalid!!",
+        //             ]   
+        //         ],Status::HTTP_NOT_ACCEPTABLE);
+        //     }
 
 
-                //check for category if exist and create if it doesnt ;
-                $category_code = Category::where('name','=',$sheet['category'])->get();
-                $category = 0;
+        //     // dd($array);
+        //     //save it
 
-                if(sizeof($category_code) == 0){
-                    $a = new Category();
-                    $a->name = $sheet['category'];
-                    $a->save();
-                    $category = $a->id;
-                }else{
-                    $category = $category_code[0]->id;
-                }
+        //     $error = [];
+        //     $success = [];
+
+        //     foreach ($array as $sheet) {
+
+        //         //check for existinf product code
+        //         $product_code = PF::where('product_code','=',$sheet['product_code'])->get();
+
+        //         if(sizeof($product_code) != 0){
+        //             array_push($error, [
+        //                 'data'      => [
+        //                     'product_code'                  => $sheet['product_code'],
+        //                     'product_name'                  => $sheet['product_name'],
+        //                     'category'                  => $sheet['category'],
+        //                 ],
+        //                 'message'   => 'Product code '. $sheet['product_code'] .' already exist!!!',
+        //             ]);
+        //             continue;
+        //         }
+
+
+        //         //check for category if exist and create if it doesnt ;
+        //         $category_code = Category::where('name','=',$sheet['category'])->get();
+        //         $category = 0;
+
+        //         if(sizeof($category_code) == 0){
+        //             $a = new Category();
+        //             $a->name = $sheet['category'];
+        //             $a->save();
+        //             $category = $a->id;
+        //         }else{
+        //             $category = $category_code[0]->id;
+        //         }
 
 
 
 
-                $b = new PF();
-                $b->product_code  = $sheet['product_code'];
-                $b->product_name  = $sheet['product_name'];
-                $b->category = $category;
-                $b->save();
+        //         $b = new PF();
+        //         $b->product_code  = $sheet['product_code'];
+        //         $b->product_name  = $sheet['product_name'];
+        //         $b->category = $category;
+        //         $b->save();
 
-                array_push($success, 
-                    [
-                        'product_code'                  => $sheet['product_code'],
-                        'product_name'                  => $sheet['product_name'],
-                        'category'                      => $sheet['category'],
-                    ]
-                );
-            }
+        //         array_push($success, 
+        //             [
+        //                 'product_code'                  => $sheet['product_code'],
+        //                 'product_name'                  => $sheet['product_name'],
+        //                 'category'                      => $sheet['category'],
+        //             ]
+        //         );
+        //     }
 
-            return response()->json([
-                    'errors' => $error,
-                    'success'=> $success
-            ]);
+        //     return response()->json([
+        //             'errors' => $error,
+        //             'success'=> $success
+        //     ]);
 
-        }
+        // }
     }
 
     public function update(Request $request, $id){
@@ -313,9 +299,10 @@ class ProductMasterListController extends Controller
 		if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
        	$pa->product_code = $request->product_code;
@@ -332,18 +319,24 @@ class ProductMasterListController extends Controller
     	$product = PF::find($id);
 
         if($product == null){
-            return response()->json(['message' => 'Product not found'], Status::HTTP_NOT_FOUND);
+            return [
+                'status'  => false,
+                'message' => 'Product not found'
+            ];
         }
 
         try{
             $product->delete();    
         }catch(\Illuminate\Database\QueryException $e){
-            return response()->json(['message' => 'Cannot delete, currently linked'], Status::HTTP_METHOD_NOT_ALLOWED);
+            return [
+                'status'  => false,
+                'message' => 'Cannot delete, currently linked'
+            ];
         }
 
-        return response()->json([
+        return [
             "message" => 'Product successfully deleted'
-        ]);
+        ];
     }	
 }
   

@@ -21,9 +21,10 @@ class LogController extends Controller
 		if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+				"status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+			];
         }
 
 

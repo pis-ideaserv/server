@@ -14,7 +14,7 @@ use DB;
 class UserController extends Controller
 {
     public function __construct(){
-        // $this->middleware('adminOnlyPermission');
+        $this->middleware('adminOnlyPermission');
     }
 
     public function index(Request $request){
@@ -23,9 +23,10 @@ class UserController extends Controller
             $filt = json_decode($request->filter);
 
             if(!is_object($filt)){
-                return response()->json([
+                return [
+                    "status" => false,
                     "errors" => "Filter must be an object"
-                ],Status::HTTP_NOT_ACCEPTABLE);
+                ];
             }
 
             $filter = [
@@ -39,7 +40,6 @@ class UserController extends Controller
             $where = [];
             
             foreach ($filter as $key => $value) {
-                // dd($filt);
                 if($value != null){
                     if($key == 'level' || $key == 'activated'){
                         if($key == 'activated'){
@@ -75,54 +75,17 @@ class UserController extends Controller
                     }
                 }
             }
+            
+            $name = Utils::Filter($filter,$filt,DB::raw('concat(first_name," ",last_name)'),"name");
+            $user = User::where($where)->where($name)->orderBy('updated_at', 'desc');
+            $per_page = $request->per_page != null ? (int)$request->per_page : 10;
 
-            if($filt->name != null){
-                
-                $name = [];
-
-                switch ($filt->name->filter) {
-                    case "iet" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), '=',$filt->name->key]);
-                        break;
-                    case "inet" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), '!=',$filt->name->key]);
-                        break;
-                    case "c" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), 'like','%'.$filt->name->key.'%']);
-                        break;
-                    case "dnc" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), 'not like','%'.$filt->name->key.'%']);
-                        break;
-                    case "sw" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), 'like',$filt->name->key.'%']);
-                        break;
-                    case "ew" :
-                        array_push($name, [DB::raw('concat(first_name," ",last_name)'), 'like','%'.$filt->name->key]);
-                        break;
-                }
-
-                $user = User::where($where)
-                        ->where($name)
-                        ->orderBy('updated_at', 'desc');
-            }else{
-                $user = User::where($where)
-                        ->orderBy('updated_at', 'desc');
-            }
-
-            if($request->per_page != null){
-                $per_page = (int)$request->per_page;
-                return UserResource::collection($user->paginate($per_page));
-            }
-
-            return UserResource::collection($user->paginate(10));
+            return UserResource::collection($user->paginate($per_page));
         }
 
-        if($request->per_page != null){
-            $per_page = (int)$request->per_page;
-            return UserResource::collection(User::orderBy('updated_at', 'desc')->paginate($per_page));
-        }
-
-        return UserResource::collection(User::orderBy('updated_at', 'desc')->paginate(10));
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+        
+        return UserResource::collection(User::orderBy('updated_at', 'desc')->paginate($per_page));
     }
 
 
@@ -146,9 +109,10 @@ class UserController extends Controller
         if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
         $user = new User();
@@ -163,9 +127,9 @@ class UserController extends Controller
 
         $user->save();
 
-        return response()->json([
+        return [
             "message" => "User successfully created",
-        ]);
+        ];
 
     }
 
@@ -174,7 +138,7 @@ class UserController extends Controller
         $user = User::find($id);
 
         if($user == null){
-            return response()->json(['message' => 'User not found'], Status::HTTP_NOT_FOUND);
+            return ['status'=>false,'message' => 'User not found'];
         }
 
 
@@ -191,9 +155,10 @@ class UserController extends Controller
         if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+                "status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
 
@@ -213,7 +178,6 @@ class UserController extends Controller
             $user->password     = bcrypt($request->password);
         }
 
-
         $user->save();
 
         return response()->json([
@@ -225,7 +189,7 @@ class UserController extends Controller
         $user = User::find($id);
 
         if($user == null){
-            return response()->json(['message' => 'User not found'], Status::HTTP_NOT_FOUND);
+            return ['status'=>false,'message' => 'User not found'];
         }
 
         $user->delete();

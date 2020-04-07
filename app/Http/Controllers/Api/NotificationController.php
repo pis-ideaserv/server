@@ -14,6 +14,10 @@ use Validator;
 use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller{
+
+	public function __construct(){
+		$this->middleware('adminOnlyPermission');
+	}
 	
 	public function index(Request $request){
 		$per_page = 10;
@@ -39,9 +43,10 @@ class NotificationController extends Controller{
 		if ($validator->fails()){
             $a = $validator->errors()->toArray();
 
-            return response()->json([
+            return [
+				"status" => false,
                 "errors" => Utils::RemakeArray($a)
-            ],Status::HTTP_NOT_ACCEPTABLE);
+            ];
         }
 
 
@@ -72,6 +77,8 @@ class NotificationController extends Controller{
 
 		// Artisan::queue("parse:".$request->type." ".$notify->id.' '.Auth::user()->id);
 
-		return "success";
+		return [
+			"message" => "success"
+		];
 	}
 }
