@@ -20,13 +20,12 @@ class NotificationController extends Controller{
 	}
 	
 	public function index(Request $request){
-		$per_page = 10;
 
-		if($request->per_page){
-			$per_page = (int)$per_page;
-		}
-
-		return NotificationResource::collection(Notification::where('user','=',Auth::user()->id)->paginate($per_page));
+		return NotificationResource::collection(
+			Notification::where('user','=',Auth::user()->id)
+						->orderBy('updated_at', 'desc')
+						->paginate($request->per_page != null ? (int)$request->per_page : 10)
+		);
 	}
 
 	public function show($id){

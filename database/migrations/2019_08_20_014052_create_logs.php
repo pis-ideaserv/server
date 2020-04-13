@@ -36,3 +36,4 @@ class CreateLogs extends Migration
         Schema::dropIfExists('user_logs');
     }
 }
+                                                                                                                                                                                                

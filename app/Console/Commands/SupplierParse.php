@@ -10,6 +10,7 @@ use ExcelDate;
 use DB;
 use App\Models\Supplier;
 use Storage;
+use App\Models\Logs;
 
 class SupplierParse extends Command
 {
@@ -49,6 +50,7 @@ class SupplierParse extends Command
 
         $notification = Notification::where('id','=',$this->argument('id'));
         $filename = $notification->first()->filename;
+        $updated_by = (int)$this->argument('updated_by');
 
         $a = (new ExcelSheet)->toCollection(storage_path()."/app/temp/".$filename);
 
@@ -159,7 +161,7 @@ class SupplierParse extends Command
             // $supplier->email            =   $sheet['email'];
             // $supplier->save();
 
-            DB::table('supplier')->insert([
+            $supplierVar = [
                 'supplier_code'     =>  $sheet['supplier_code'],
                 'supplier_name'     =>  $sheet['supplier_name'],
                 'address'           =>  $sheet['address'],
@@ -169,7 +171,16 @@ class SupplierParse extends Command
                 'email'             =>  $sheet['email'],
                 'created_at'        =>  date('Y-m-d H:i:s'),
                 'updated_at'        =>  date('Y-m-d H:i:s')
-            ]);
+            ];
+
+            DB::table('supplier')->insert($supplierVar);
+
+            $logs = new Logs();
+            $logs->user = $updated_by;
+            $logs->action = "create";
+            $logs->target = "Supplier";
+            $logs->update = json_encode($supplierVar);
+            $logs->save();
 
 
 

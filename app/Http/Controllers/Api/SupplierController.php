@@ -11,6 +11,8 @@ use Status;
 use Validator;
 use Auth;
 use App\Imports\ExcelSheet;
+use App\Models\Logs;
+use App\Http\Resources\SnapshotResource;
 
 class SupplierController extends Controller
 {
@@ -87,8 +89,21 @@ class SupplierController extends Controller
                 return SupplierResource::collection($query);
         }
 
-        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+        if($request->snapshot != null && is_numeric($request->snapshot)) {
+            $id = (int)$request->snapshot;
+            $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
 
+            if($id == 0) return SupplierResource::collection(Supplier::orderBy('updated_at', 'desc')->paginate($per_page));
+
+            return SnapshotResource::collection(
+                Logs::where('id','>',$id)
+                    ->where('target','=','Supplier')
+                    ->orderBy('updated_at', 'desc')
+                    ->paginate($per_page)
+            );
+        }
+
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
         return SupplierResource::collection(Supplier::paginate($per_page));
     }
 
@@ -97,187 +112,43 @@ class SupplierController extends Controller
     }
 
     public function store(Request $request){
-        // if(!$request->hasFile('file')){
-            $validator = Validator::make($request->all(), [
-                'supplier_code'                 =>  'required|unique:supplier,supplier_code',
-                'supplier_name'                 =>  'required',
-                'address'                       =>  'required',
-                // 'tin'                           =>  'required',
-                'contact_person'                =>  'required',
-                'contact_number'                =>  'required|unique:supplier,contact_number',
-                'email'                         =>  'required|email|unique:supplier,email'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'supplier_code'                 =>  'required|unique:supplier,supplier_code',
+            'supplier_name'                 =>  'required',
+            'address'                       =>  'required',
+            // 'tin'                           =>  'required',
+            'contact_person'                =>  'required',
+            'contact_number'                =>  'required|unique:supplier,contact_number',
+            'email'                         =>  'required|email|unique:supplier,email'
+        ]);
 
-            if ($validator->fails()){
-                $a = $validator->errors()->toArray();
+        if ($validator->fails()){
+            $a = $validator->errors()->toArray();
 
-                return [
-                    "status" => false,
-                    "errors" => Utils::RemakeArray($a)
-                ];
-            }
+            return [
+                "status" => false,
+                "errors" => Utils::RemakeArray($a)
+            ];
+        }
 
-            $supplier = new Supplier();
-            $supplier->supplier_code    =   $request->supplier_code;
-            $supplier->supplier_name    =   $request->supplier_name;
-            $supplier->address          =   $request->address;
-            // $supplier->tin              =   $request->tin;
-            
-            if($request->tin != null){
-                $supplier->tin              =   $request->tin;
-            }
+        $supplier = new Supplier();
+        $supplier->supplier_code    =   $request->supplier_code;
+        $supplier->supplier_name    =   $request->supplier_name;
+        $supplier->address          =   $request->address;
+        // $supplier->tin              =   $request->tin;
+        
+        if($request->tin != null){
+            $supplier->tin              =   $request->tin;
+        }
 
-            $supplier->contact_person   =   $request->contact_person;
-            $supplier->contact_number   =   $request->contact_number;
-            $supplier->email            =   $request->email;
-            $supplier->save();
+        $supplier->contact_person   =   $request->contact_person;
+        $supplier->contact_number   =   $request->contact_number;
+        $supplier->email            =   $request->email;
+        $supplier->save();
 
-            return response()->json([
-                "message" => "Supplier successfully created",
-            ]);
-        // }else{
-
-        //     ini_set('max_execution_time', 0);
-
-
-        //     $column = 7;
-        //     $array = [];   
-
-        //     $validator = Validator::make($request->all(),[
-        //         'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
-        //     ]);
-
-        //     if ($validator->fails()){
-        //         $a = $validator->errors()->toArray();
-
-        //         return response()->json([
-        //             "errors" => Utils::RemakeArray($a)
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     //process excel
-        //     $a = (new ExcelSheet)->toCollection($request->file('file'));
-
-        //     // dd($a->get(0));
-
-            
-
-        //     //check sheet if empty
-        //     if(sizeof($a->toArray()[0]) < 2){
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet file is empty!!",
-        //             ]
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-        //     //check column format
-        //     for($i=1;$i<sizeof($a->toArray()[0]);$i++){
-
-        //         $row = $a->toArray()[0][$i];
-                
-        //         for($y=0;$y<sizeof($row);$y++){
-        //             if($y+1 > $column && $row[$y] != null){
-        //                 return response()->json([
-        //                     'errors' => [
-        //                         "message" => "Sheet column format is invalid!!",
-        //                     ]   
-        //                 ],Status::HTTP_NOT_ACCEPTABLE);
-        //             }
-        //         }
-
-
-        //         //this is the end of loop if all column in a row is null
-        //         if($row[0] == null && $row[1] == null && $row[2] == null && $row[3] == null && $row[4] == null && $row[5] == null && $row[6] == null){
-        //             break;
-        //         }
-
-        //         //if true file is valid
-        //         if($row[0] != null && $row[1] != null && $row[2] != null 
-        //             // && $row[3] != null /*tin*/ 
-        //             && $row[4] != null && $row[5] != null && $row[6] != null){
-
-        //             array_push($array,[
-        //                 'supplier_code'  => $row[0],
-        //                 'supplier_name'  => $row[1],
-        //                 'address'        => $row[2],
-        //                 'tin'            => $row[3],
-        //                 'contact_person' => $row[4],
-        //                 'contact_number' => $row[5],
-        //                 'email'          => $row[6],
-        //             ]);
-        //             continue;
-        //         }
-
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet column format is invalid!!",
-        //             ]   
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     $error = [];
-        //     $success = [];
-
-        //     foreach ($array as $sheet) {
-
-        //         $supplier = Supplier::where('supplier_code','=',$sheet['supplier_code'])->get();
-
-        //         if(sizeof($supplier) != 0){
-        //             array_push($error, [
-        //                 'data'      => [
-        //                     'supplier_code'      => $sheet['supplier_code'],
-        //                     'supplier_name'      => $sheet['supplier_name'],
-        //                     'address'            => $sheet['address'],
-        //                     'tin'                => $sheet['tin'],
-        //                     'contact_person'     => $sheet['contact_person'],
-        //                     'contact_number'     => $sheet['contact_number'],
-        //                     'email'              => $sheet['email']
-        //                 ],
-        //                 'message'   => 'Supplier code '. $sheet['supplier_code'] .' already exist!!!',
-        //             ]);
-        //             continue;
-        //         }
-
-        //         $supplier = new Supplier();
-        //         $supplier->supplier_code    =   $sheet['supplier_code'];
-        //         $supplier->supplier_name    =   $sheet['supplier_name'];
-        //         $supplier->address          =   $sheet['address'];
-                
-
-        //         // $supplier->tin              =   $sheet['tin'];
-
-        //         if($sheet['tin'] != null ){
-        //             $supplier->tin              =   $sheet['tin'];
-        //         }
-
-
-        //         $supplier->contact_person   =   $sheet['contact_person'];
-        //         $supplier->contact_number   =   $sheet['contact_number'];
-        //         $supplier->email            =   $sheet['email'];
-        //         $supplier->save();
-
-        //         array_push($success, 
-        //             [
-        //                 'supplier_code'      => $sheet['supplier_code'],
-        //                 'supplier_name'      => $sheet['supplier_name'],
-        //                 'address'            => $sheet['address'],
-        //                 'tin'                => $sheet['tin'],
-        //                 'contact_person'     => $sheet['contact_person'],
-        //                 'contact_number'     => $sheet['contact_number'],
-        //                 'email'              => $sheet['email'],
-        //             ]
-        //         );
-        //     }
-
-        //     return response()->json([
-        //             'errors' => $error,
-        //             'success'=> $success
-        //     ]);
-
-        // }
+        return response()->json([
+            "message" => "Supplier successfully created",
+        ]);
     }
 
     public function update(Request $request,$id){

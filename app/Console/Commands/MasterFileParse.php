@@ -11,6 +11,7 @@ use DB;
 use App\Models\Category;
 use App\Models\ProductMasterList as PF;
 use Storage;
+use App\Models\Logs;
 
 class MasterFileParse extends Command
 {
@@ -50,6 +51,7 @@ class MasterFileParse extends Command
 
         $notification = Notification::where('id','=',$this->argument('id'));
         $filename = $notification->first()->filename;
+        $updated_by = (int)$this->argument('updated_by');
         
         $a = (new ExcelSheet)->toCollection(storage_path()."/app/temp/".$filename);
 
@@ -132,43 +134,44 @@ class MasterFileParse extends Command
                 continue;
             }
 
-
-            //check for category if exist and create if it doesnt ;
             $category_code = Category::where('name','=',$sheet['category'])->get();
             $category = 0;
 
             if(sizeof($category_code) == 0){
-                
-                // $a = new Category();
-                // $a->name = $sheet['category'];
-                // $a->save();
-                // $category = $a->id;
-
-                $category = DB::table('category')->insertGetId([
+                $catVal = [
                     'name'          =>  $sheet['category'],
                     'created_at'    =>  date('Y-m-d H:i:s'),
                     'updated_at'    =>  date('Y-m-d H:i:s'),
-                ]);
+                ];
+                $category = DB::table('category')->insertGetId($catVal);
+                
+                $logs = new Logs();
+                $logs->user = $updated_by;
+                $logs->action = "create";
+                $logs->target = "Category";
+                $logs->update = json_encode($catVal);
+                $logs->save();
+
             }else{
                 $category = $category_code[0]->id;
             }
 
-
-
-
-            // $b = new PF();
-            // $b->product_code  = $sheet['product_code'];
-            // $b->product_name  = $sheet['product_code'];
-            // $b->category = $category;
-            // $b->save();
-
-            DB::table('product_master_list')->insert([
+            $pmlVar = [
                 'product_code' => $sheet['product_code'],
                 'product_name' => $sheet['product_code'],
                 'category'     => $category,
                 'created_at'   => date('Y-m-d H:i:s'),
                 'updated_at'   => date('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            DB::table('product_master_list')->insert($pmlVar);
+
+            $logs = new Logs();
+            $logs->user = $updated_by;
+            $logs->action = "create";
+            $logs->target = "ProductMasterList";
+            $logs->update = json_encode($pmlVar);
+            $logs->save();
 
 
             array_push($success, 

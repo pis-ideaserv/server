@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductMasterList;
 use Auth;
 use Storage;
+use App\Models\Logs;
 
 
 class ProductParse extends Command
@@ -222,52 +223,9 @@ class ProductParse extends Command
                 continue;
             }
 
-
-
-            // $product                                = new Product();
-            // $product->supplier                      = $supplier[0]->id;
-            // $product->product                       = $products[0]->id;
-            // $product->delivery_date                 = date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date'])));
-            // $product->reference_delivery_document   = $sheet['reference_delivery_document'];
-            // $product->serial_number                 = $sheet['serial_number'];   
-            // $product->created_by                    = Auth::user()->id;
-            // $product->updated_by                    = Auth::user()->id;
-
-            // $warranty = $sheet['warranty'];
-            // $start = date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start'])));
-            // $end = date("Y-m-d",strtotime("+ ".$warranty." months ".$start));
-
-
-            // $product->warranty                      = $warranty;
-            // $product->warranty_start                = $start;
-            // $product->warranty_end                  = $end;
-            // $product->remarks                       = $sheet['remarks'];
-
-
-            // switch(trim(strtolower($sheet['status']))){
-            //     case null :
-            //         $product->status = 1;
-            //         break;
-            //     case "new" :
-            //         $product->status = 1;
-            //         break;
-            //     case "replaced" :
-            //         $product->status = 2;
-            //         break;
-            //     case "returned" :
-            //         $product->status = 3;
-            //         break;
-            //     case "repaired" :
-            //         $product->status = 4;
-            //         break;
-            // }
-
-            // $product->save();
-
             $warranty = $sheet['warranty'];
             $start = date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start'])));
             $end = date("Y-m-d",strtotime("+ ".$warranty." months ".$start));
-
 
             $status = 0;
 
@@ -289,9 +247,7 @@ class ProductParse extends Command
                     break;
             }
 
-
-
-            DB::table('product')->insert([
+            $productsVar = [
                 'supplier'                      => $supplier[0]->id,
                 'product'                       => $products[0]->id,
                 'delivery_date'                 => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date']))),
@@ -306,7 +262,15 @@ class ProductParse extends Command
                 'status'                        => $status,
                 'created_at'                    => date('Y-m-d H:i:s'),
                 'updated_at'                    => date('Y-m-d H:i:s')
-            ]);
+            ];
+            DB::table('product')->insert($productsVar);
+            
+            $logs = new Logs();
+            $logs->user = $updated_by;
+            $logs->action = "create";
+            $logs->target = "Product";
+            $logs->update = json_encode($productsVar);
+            $logs->save();
 
 
             array_push($success, 

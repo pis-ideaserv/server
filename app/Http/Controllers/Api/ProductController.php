@@ -16,6 +16,8 @@ use App\Imports\ExcelSheet;
 use Excel;
 use ExcelDate;
 use DB;
+use App\Models\Logs;
+use App\Http\Resources\SnapshotResource;
 
 class ProductController extends Controller
 {
@@ -28,9 +30,7 @@ class ProductController extends Controller
     public function index(Request $request){
 
         if($request->filter){
-            
             $filt = json_decode($request->filter);
-        
 
             if(!is_object($filt)){
                 return [
@@ -50,183 +50,6 @@ class ProductController extends Controller
                 'remarks'                       =>  property_exists($filt,'remarks') ? $filt->remarks : null
             ];
 
-            // $where = [];
-
-            // foreach ($filter as $key => $value) {
-            //     if($value != null){
-            //         switch($value->filter){
-            //             case "iet" :
-            //                 array_push($where, [$key, '=',$value->key]);
-            //                 break;
-            //             case "inet" :
-            //                 array_push($where, [$key, '!=',$value->key]);
-            //                 break;
-            //             case "c" :
-            //                 array_push($where, [$key, 'like','%'.$value->key.'%']);
-            //                 break;
-            //             case "dnc" :
-            //                 array_push($where, [$key, 'not like','%'.$value->key.'%']);
-            //                 break;
-            //             case "sw" :
-            //                 array_push($where, [$key, 'like',$value->key.'%']);
-            //                 break;
-            //             case "ew" :
-            //                 array_push($where, [$key, 'like','%'.$value->key]);
-            //                 break;
-            //         }
-            //     }
-            // }
-
-            // $supplier = [];
-            // if(property_exists($filt,'supplier')){
-            //     switch ($filt->supplier->filter) {
-            //         case "iet" :
-            //             array_push($supplier, ['su.supplier_code', '=',$filt->supplier->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($supplier, ['su.supplier_code', '!=',$filt->supplier->key]);
-            //             break;
-            //         case "c" :
-            //             array_push($supplier, ['su.supplier_code', 'like','%'.$filt->supplier->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             array_push($supplier, ['su.supplier_code', 'not like','%'.$filt->supplier->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             array_push($supplier, ['su.supplier_code', 'like',$filt->supplier->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             array_push($supplier, ['su.supplier_code', 'like','%'.$filt->supplier->key]);
-            //             break;
-            //     }
-            // }
-
-            // $supplier_name = [];
-            // if(property_exists($filt,'supplier_name')){
-            //     switch ($filt->supplier_name->filter) {
-            //         case "iet" :
-            //             array_push($supplier_name, ['su.supplier_name', '=',$filt->supplier_name->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($supplier_name, ['su.supplier_name', '!=',$filt->supplier_name->key]);
-            //             break;
-            //         case "c" :
-            //             array_push($supplier_name, ['su.supplier_name', 'like','%'.$filt->supplier_name->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             array_push($supplier_name, ['su.supplier_name', 'not like','%'.$filt->supplier_name->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             array_push($supplier_name, ['su.supplier_name', 'like',$filt->supplier_name->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             array_push($supplier_name, ['su.supplier_name', 'like','%'.$filt->supplier_name->key]);
-            //             break;
-            //     }
-            // }
-
-
-            // $product = [];
-            // if(property_exists($filt,'product')){
-            //     switch ($filt->product->filter) {
-            //         case "iet" :
-            //             array_push($product, ['pml.product_code', '=',$filt->product->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($product, ['pml.product_code', '!=',$filt->product->key]);
-            //             break;
-            //         case "c" :
-            //             array_push($product, ['pml.product_code', 'like','%'.$filt->product->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             array_push($product, ['pml.product_code', 'not like','%'.$filt->product->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             array_push($product, ['pml.product_code', 'like',$filt->product->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             array_push($product, ['pml.product_code', 'like','%'.$filt->product->key]);
-            //             break;
-            //     }
-            // }
-
-            // $product_description = [];
-            // if(property_exists($filt,'product_description')){
-            //     switch ($filt->product_description->filter) {
-            //         case "iet" :
-            //             array_push($product_description, ['pml.product_name', '=',$filt->product_description->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($product_description, ['pml.product_name', '!=',$filt->product_description->key]);
-            //             break;
-            //         case "c" :
-            //             array_push($product_description, ['pml.product_name', 'like','%'.$filt->product_description->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             array_push($product_description, ['pml.product_name', 'not like','%'.$filt->product_description->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             array_push($product_description, ['pml.product_name', 'like',$filt->product_description->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             array_push($product_description, ['pml.product_name', 'like','%'.$filt->product_description->key]);
-            //             break;
-            //     }
-            // }
-
-            // $category = [];
-            // if(property_exists($filt,'category')){
-            //     switch ($filt->category->filter) {
-            //         case "iet" :
-            //             array_push($category, ['cat.name', '=',$filt->category->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($category, ['cat.name', '!=',$filt->category->key]);
-            //             break;
-            //         case "c" :
-            //             array_push($category, ['cat.name', 'like','%'.$filt->category->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             array_push($category, ['cat.name', 'not like','%'.$filt->category->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             array_push($category, ['cat.name', 'like',$filt->category->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             array_push($category, ['cat.name', 'like','%'.$filt->category->key]);
-            //             break;
-            //     }
-            // }
-
-            // $created_by = [];
-            // if(property_exists($filt,'created_by')){
-            //     switch ($filt->created_by->filter) {
-            //         case "iet" :
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), '=',$filt->created_by->key]);
-            //             break;
-            //         case "inet" :
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), '!=',$filt->created_by->key]);
-            //             break;
-            //         case "c" :
-            //             // array_push($category, ['cat.name', 'like','%'.$filt->category->key.'%']);
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), 'like','%'.$filt->created_by->key.'%']);
-            //             break;
-            //         case "dnc" :
-            //             // array_push($category, ['cat.name', 'not like','%'.$filt->category->key.'%']);
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), 'not like','%'.$filt->created_by->key.'%']);
-            //             break;
-            //         case "sw" :
-            //             // array_push($category, ['cat.name', 'like',$filt->category->key.'%']);
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), 'like',$filt->created_by->key.'%']);
-            //             break;
-            //         case "ew" :
-            //             // array_push($category, ['cat.name', 'like','%'.$filt->category->key]);
-            //             array_push($created_by, [DB::raw('concat(use.first_name," ",use.last_name)'), 'like','%'.$filt->created_by->key]);
-            //             break;
-            //     }
-            // }
-
-            
             $per_page               = $request->per_page != null ? (int)$request->per_page : 10;
             $created_by             = Utils::Filter($filter,$filt,DB::raw('concat(use.first_name," ",use.last_name)'),"created_by");
             $supplier               = Utils::Filter($filter,$filt,"su.supplier_code","supplier");
@@ -235,9 +58,6 @@ class ProductController extends Controller
             $where                  = Utils::Filter($filter);
             $product                = Utils::Filter($filter,$filt,"pml.product_code","product");
             $product_description    = Utils::Filter($filter,$filt,"pml.product_name","product","product_description");
-
-
-            
 
             $product = Product::select('product.*')
                     ->leftJoin('product_master_list as pml','product.product','=','pml.id')
@@ -266,13 +86,23 @@ class ProductController extends Controller
             return ProductResource::collection($query);
         }
 
-        if($request->per_page != null){
-            $per_page = (int)$request->per_page;
-            return ProductResource::collection(Product::orderBy('updated_at', 'desc')->paginate($per_page));
-        }
+        if($request->snapshot != null && is_numeric($request->snapshot)) {
+            $id = (int)$request->snapshot;
+            $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
 
-        return (ProductResource::collection(Product::orderBy('updated_at', 'desc')->paginate(10)));
+            if($id == 0) return (ProductResource::collection(Product::orderBy('updated_at', 'desc')->paginate($per_page)));
+            
+
+            return SnapshotResource::collection(
+                Logs::where('id','>',$id)
+                    ->where('target','=','Product')
+                    ->orderBy('updated_at', 'desc')
+                    ->paginate($per_page)
+            );
+        }
         
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+        return (ProductResource::collection(Product::orderBy('updated_at', 'desc')->paginate($per_page)));
     }
 
     public function show($id){
@@ -331,249 +161,6 @@ class ProductController extends Controller
             return response()->json([
                 "message" => "Product successfully created",
             ]);
-        // }else{
-
-        //     ini_set('max_execution_time', 0);
-            
-        //     $column = 11;
-        //     $array = [];
-
-        //     $validator = Validator::make($request->all(),[
-        //         'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
-        //     ]);
-
-        //     if ($validator->fails()){
-        //         $a = $validator->errors()->toArray();
-
-        //         return response()->json([
-        //             "errors" => Utils::RemakeArray($a)
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     //process excel
-        //     $a = (new ExcelSheet)->toCollection($request->file('file'));
-
-        //     //check format if empty
-        //     if(sizeof($a->toArray()[0]) < 2){
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet file is empty!!",
-        //             ]
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     //check column format
-        //     for($i=1;$i<sizeof($a->toArray()[0]);$i++){
-
-        //         $row = $a->toArray()[0][$i];
-                
-        //         for($y=0;$y<sizeof($row);$y++){
-        //             if($y+1 > $column && $row[$y] != null){
-        //                 return response()->json([
-        //                     'errors' => [
-        //                         "message" => "Sheet column format is invalid!!",
-        //                     ]   
-        //                 ],Status::HTTP_NOT_ACCEPTABLE);
-        //             }
-        //         }
-
-
-        //         //this is the end of loop if all column in a row is null
-        //         if(
-        //             $row[0] == null && $row[1] == null && 
-        //             $row[2] == null && $row[3] == null && 
-        //             $row[4] == null && $row[5] == null && 
-        //             $row[6] == null && $row[7] == null && 
-        //             $row[8] == null && $row[9] == null
-        //         ){
-        //             break;
-        //         }
-
-        //         //if true file is valid
-        //         if(
-        //             $row[0] != null && $row[1] != null && 
-        //             $row[2] != null && $row[3] != null && 
-        //             $row[4] != null && //-- for serial number 
-        //             $row[5] != null && 
-        //             $row[6] != null && $row[7] != null
-        //         ){
-
-        //             array_push($array,[
-        //                 'supplier_code'                 => $row[0],
-        //                 'product_code'                  => $row[1],
-        //                 // 'product_description'           => $row[2],
-        //                 'delivery_date'                 => $row[2],
-        //                 'reference_delivery_document'   => $row[3],
-        //                 'serial_number'                 => $row[4],
-        //                 'warranty'                      => $row[5],
-        //                 'warranty_start'                => $row[6],
-        //                 'warranty_end'                  => $row[7],
-        //                 'status'                        => $row[8],
-        //                 'remarks'                       => $row[9],
-        //             ]);
-        //             continue;
-        //         }
-
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet column format is invalid!!",
-        //             ]   
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     // dd($array);
-        //     //save it
-
-        //     $error = [];
-        //     $success = [];
-
-        //     foreach ($array as $sheet) {
-
-        //         $supplier = Supplier::where('supplier_code','=',$sheet['supplier_code'])->get();
-                
-        //         // $product_code = Product::where('reference_delivery_document','=',$sheet['reference_delivery_document'])
-        //         //                         ->orWhere('serial_number','=',$sheet['serial_number'])
-        //         //                         ->get();
-        //         $product_code = Product::where('serial_number','=',$sheet['serial_number'])->get();
-
-        //         $products = ProductMasterList::where('product_code','=',$sheet['product_code'])->get();
-
-
-
-        //         if(sizeof($products) == 0){
-        //              array_push($error, [
-        //                 'data'      => [
-        //                     'supplier_code'                 => $sheet['supplier_code'],
-        //                     'product_code'                  => $sheet['product_code'],
-        //                     // 'product_description'           => $sheet['product_description'],
-        //                     'delivery_date'                 => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date']))),
-        //                     'reference_delivery_document'   => $sheet['reference_delivery_document'],
-        //                     'serial_number'                 => $sheet['serial_number'],
-        //                     'warranty'                      => $sheet['warranty'],
-        //                     'warranty_start'                => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start']))),
-        //                     'warranty_end'                  => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_end']))),
-        //                     'status'                        => $sheet['status'] == null ? "New" : $sheet['status'],
-        //                     'remarks'                       => $sheet['remarks'],
-        //                 ],
-        //                 'message'   => 'Product code '. $sheet['product_code'] .' dont exist!!!',
-        //             ]);
-        //             continue;
-        //         }
-
-
-        //         if(sizeof($supplier) == 0){
-        //             array_push($error, [
-        //                 'data'      => [
-        //                     'supplier_code'                 => $sheet['supplier_code'],
-        //                     'product_code'                  => $sheet['product_code'],
-        //                     // 'product_description'           => $sheet['product_description'],
-        //                     'delivery_date'                 => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date']))),
-        //                     'reference_delivery_document'   => $sheet['reference_delivery_document'],
-        //                     'serial_number'                 => $sheet['serial_number'],
-        //                     'warranty'                      => $sheet['warranty'],
-        //                     'warranty_start'                => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start']))),
-        //                     'warranty_end'                  => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_end']))),
-        //                     'status'                        => $sheet['status'] == null ? "New" : $sheet['status'],
-        //                     'remarks'                       => $sheet['remarks'],
-        //                 ],
-        //                 'message'   => 'Supplier code '. $sheet['supplier_code'] .' dont exist!!!',
-        //             ]);
-        //             continue;
-        //         }
-
-        //         if(sizeof($product_code) != 0){
-        //              array_push($error, [
-        //                 'data'      => [
-        //                     'supplier_code'                 => $sheet['supplier_code'],
-        //                     'product_code'                  => $sheet['product_code'],
-        //                     // 'product_description'           => $sheet['product_description'],
-        //                     'delivery_date'                 => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date']))),
-        //                     'reference_delivery_document'   => $sheet['reference_delivery_document'],
-        //                     'serial_number'                 => $sheet['serial_number'],
-        //                     'warranty'                      => $sheet['warranty'],
-        //                     'warranty_start'                => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start']))),
-        //                     'warranty_end'                  => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_end']))),
-        //                     'status'                        => $sheet['status'] == null ? "New" : $sheet['status'],
-        //                     'remarks'                       => $sheet['remarks'],
-        //                 ],
-        //                 'message'   => 'Product code '. $sheet['product_code'] ."'s serial number already exist!!!",
-        //             ]);
-        //             continue;
-        //         }
-
-
-
-        //         $product                                = new Product();
-        //         $product->supplier                      = $supplier[0]->id;
-        //         $product->product                       = $products[0]->id;
-        //         // $product->product_description           = $sheet['product_description'];
-        //         $product->delivery_date                 = date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date'])));
-        //         $product->reference_delivery_document   = $sheet['reference_delivery_document'];
-        //         $product->serial_number                 = $sheet['serial_number'];   
-        //         $product->created_by                    = Auth::user()->id;
-        //         $product->updated_by                    = Auth::user()->id;
-
-        //         $warranty = $sheet['warranty'];
-        //         $start = date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start'])));
-        //         $end = date("Y-m-d",strtotime("+ ".$warranty." months ".$start));
-
-
-        //         $product->warranty                      = $warranty;
-        //         $product->warranty_start                = $start;
-        //         $product->warranty_end                  = $end;
-        //         $product->remarks                       = $sheet['remarks'];
-
-
-        //         switch(trim(strtolower($sheet['status']))){
-        //             case null :
-        //                 $product->status = 1;
-        //                 break;
-        //             case "new" :
-        //                 $product->status = 1;
-        //                 break;
-        //             case "replaced" :
-        //                 $product->status = 2;
-        //                 break;
-        //             case "returned" :
-        //                 $product->status = 3;
-        //                 break;
-        //             case "repaired" :
-        //                 $product->status = 4;
-        //                 break;
-        //         }
-
-
-
-        //         $product->save();
-
-        //         array_push($success, 
-        //             [
-        //                 'supplier_code'                 => $sheet['supplier_code'],
-        //                 'product_code'                  => $sheet['product_code'],
-        //                 // 'product_description'           => $sheet['product_description'],
-        //                 'delivery_date'                 => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['delivery_date']))),
-        //                 'reference_delivery_document'   => $sheet['reference_delivery_document'],
-        //                 'serial_number'                 => $sheet['serial_number'],
-        //                 'warranty'                      => $sheet['warranty'],
-        //                 'warranty_start'                => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_start']))),
-        //                 'warranty_end'                  => date("Y-m-d" ,strtotime('@'.ExcelDate::excelToTimestamp($sheet['warranty_end']))),
-        //                 'status'                        => $sheet['status'] == null ? "New" : $sheet['status'],
-        //                 'remarks'                       => $sheet['remarks'],
-        //             ]
-        //         );
-        //     }
-
-            
-            
-        //     return response()->json([
-        //             'errors' => $error,
-        //             'success'=> $success
-        //     ]);
-
-        // }
     }
     
     public function update(Request $request, $id){
