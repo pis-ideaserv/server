@@ -108,18 +108,18 @@ class ProductMasterListController extends Controller
         if($request->snapshot != null && is_numeric($request->snapshot)) {
             $id = (int)$request->snapshot;
             $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
-
-            if($id == 0) return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate($per_page));
+            $log = Logs::orderBy('updated_at', 'desc')->first();
 
             return SnapshotResource::collection(
                 Logs::where('id','>',$id)
                     ->where('target','=','ProductMasterList')
                     ->paginate($per_page)
-            );
+            )->additional(['snapshot' => $log !== null ? $log->id : 0]);
         }
 
         $per_page = $request->per_page != null ? (int)$request->per_page : 10;
-        return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate($per_page));
+        $log = Logs::orderBy('updated_at', 'desc')->first();
+        return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate($per_page))->additional(['snapshot' => $log !== null ? $log->id : 0]);
     }
 
     public function show($id){
