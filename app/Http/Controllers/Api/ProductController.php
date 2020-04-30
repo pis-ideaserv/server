@@ -50,6 +50,7 @@ class ProductController extends Controller
                 'remarks'                       =>  property_exists($filt,'remarks') ? $filt->remarks : null
             ];
 
+
             $per_page               = $request->per_page != null ? (int)$request->per_page : 10;
             $created_by             = Utils::Filter($filter,$filt,DB::raw('concat(use.first_name," ",use.last_name)'),"created_by");
             $supplier               = Utils::Filter($filter,$filt,"su.supplier_code","supplier");
@@ -57,7 +58,7 @@ class ProductController extends Controller
             $category               = Utils::Filter($filter,$filt,"cat.name","category");
             $where                  = Utils::Filter($filter);
             $product                = Utils::Filter($filter,$filt,"pml.product_code","product");
-            $product_description    = Utils::Filter($filter,$filt,"pml.product_name","product","product_description");
+            $product_description    = Utils::Filter($filter,$filt,"pml.product_name","product_description");
 
             $product = Product::select('product.*')
                     ->leftJoin('product_master_list as pml','product.product','=','pml.id')
@@ -73,7 +74,8 @@ class ProductController extends Controller
                     ->where($product_description)
                     ->orderBy('product.updated_at', 'desc')
                     ->paginate($per_page);
-            
+                
+
             return ProductResource::collection($product);
             
         }

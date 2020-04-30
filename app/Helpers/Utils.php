@@ -15,11 +15,12 @@ class Utils{
 	}
 	
 	static function Filter($filter,$filt=null,$command=null,$object=""){
+		
 		$array = [];
 
 		if($command == null){
 			foreach ($filter as $key => $value) {
-                if($value != null){
+                if($value->key){
                     switch($value->filter){
                         case "iet" :
                             array_push($array, [$key, '=',$value->key]);
@@ -45,26 +46,30 @@ class Utils{
 			return $array;
 		}
 
+		
 		if(property_exists($filt,$object)){
-			switch ($filt[$object]->filter) {
-				case "iet" :
-					array_push($array, [$command, '=',$filt[$object]->key]);
-					break;
-				case "inet" :
-					array_push($array, [$command, '!=',$filt[$object]->key]);
-					break;
-				case "c" :
-					array_push($array, [$command, 'like','%'.$filt[$object]->key.'%']);
-					break;
-				case "dnc" :
-					array_push($array, [$command, 'not like','%'.$filt[$object]->key.'%']);
-					break;
-				case "sw" :
-					array_push($array, [$command, 'like',$filt[$object]->key.'%']);
-					break;
-				case "ew" :
-					array_push($array, [$command, 'like','%'.$filt[$object]->key]);
-					break;
+			$filt = json_decode(json_encode($filt), true);
+			if($filt[$object]['key']){
+				switch ($filt[$object]['filter']) {
+					case "iet" :
+						array_push($array, [$command, '=',$filt[$object]['key']]);
+						break;
+					case "inet" :
+						array_push($array, [$command, '!=',$filt[$object]['key']]);
+						break;
+					case "c" :
+						array_push($array, [$command, 'like','%'.$filt[$object]['key'].'%']);
+						break;
+					case "dnc" :
+						array_push($array, [$command, 'not like','%'.$filt[$object]['key'].'%']);
+						break;
+					case "sw" :
+						array_push($array, [$command, 'like',$filt[$object]['key'].'%']);
+						break;
+					case "ew" :
+						array_push($array, [$command, 'like','%'.$filt[$object]['key']]);
+						break;
+				}
 			}
 			return $array;
 		}

@@ -21,25 +21,26 @@ class ProductMasterListController extends Controller
 
         if($request->filter){
             $filt = json_decode($request->filter);
-
             if(!is_object($filt)){
                 return [
                     "status" => false,
                     "errors" => "Filter must be an object"
                 ];
             }
+            // dd($filt)
 
-            $filter = [
-                'product_code'          =>  property_exists($filt,$filt->product_code) ? $filt->product_code : null,
-                'product_name'          =>  property_exists($filt,$filt->product_name) ? $filt->product_name : null,
-                'category'              =>  property_exists($filt,$filt->category) ? $filt->category : null
-            ];
+            // $filter = [
+            //     'product_code'          =>  property_exists($filt,$filt['product_code']) ? $filt['product_code'] : null,
+            //     'product_name'          =>  property_exists($filt,$filt['product_name']) ? $filt['product_name'] : null,
+            //     'category'              =>  property_exists($filt,$filt['category']) ? $filt['category'] : null
+            // ];
+
 
 
             $where = [];
 
-            foreach ($filter as $key => $value) {
-                if($value != null){
+            foreach ($filt as $key => $value) {
+                if($value->key != null){
                     switch($value->filter){
                         case "iet" :
                             if($key == "category"){
