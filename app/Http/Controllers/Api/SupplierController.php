@@ -48,10 +48,7 @@ class SupplierController extends Controller
             $where = [];
 
             foreach ($filter as $key => $value) {
-                if($value != null){
-
-                    // dd($value->filter);
-
+                if($value->key){
                     switch($value->filter){
                         case "iet" :
                             array_push($where, [$key, '=',$value->key]);
