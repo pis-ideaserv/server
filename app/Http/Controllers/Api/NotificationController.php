@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 class NotificationController extends Controller{
 
 	public function __construct(){
-		$this->middleware('adminOnlyPermission');
+		// $this->middleware('adminOnlyPermission');
 	}
 	
 	public function index(Request $request){

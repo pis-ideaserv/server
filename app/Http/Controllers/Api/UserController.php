@@ -42,7 +42,7 @@ class UserController extends Controller
             $where = [];
             
             foreach ($filter as $key => $value) {
-                if($value != null){
+                if($value->key){
                     if($key == 'level' || $key == 'activated'){
                         if($key == 'activated'){
                             if($value->key == 2){
