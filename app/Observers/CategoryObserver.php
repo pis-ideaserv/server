@@ -16,14 +16,14 @@ class CategoryObserver
      */
     public function created(Category $category)
     {
-        $a = $category->getAttributes();
+        // $a = $category->getAttributes();
 
-        $logs = new Logs();
-        $logs->user = Auth::user()->id;
-        $logs->action = "create";
-        $logs->target = "Category";
-        $logs->update = json_encode($a);
-        $logs->save();
+        // $logs = new Logs();
+        // $logs->user = Auth::user()->id;
+        // $logs->action = "create";
+        // $logs->target = "Category";
+        // $logs->update = json_encode($a);
+        // $logs->save();
     }
 
     /**
