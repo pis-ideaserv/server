@@ -119,7 +119,7 @@ class ProductController extends Controller
                 'reference_delivery_document'   =>  'required',
                 //'reference_delivery_document'   =>  'required|unique:product,reference_delivery_document',
                 'serial_number'                 =>  'required|unique:product,serial_number',
-                'warranty'                      =>  'required',
+                'warranty'                      =>  'required|integer',
                 'warranty_start'                =>  'required',
                 'status'                        =>  'required'
             ]);
@@ -181,7 +181,7 @@ class ProductController extends Controller
             // 'reference_delivery_document'   =>  'required|unique:product,reference_delivery_document,'.$id,
             'reference_delivery_document'   =>  'required',
             'serial_number'                 =>  'required|unique:product,serial_number,'.$id,
-            'warranty'                      =>  'required',
+            'warranty'                      =>  'required|integer',
             'warranty_start'                =>  'required',
             'status'                        =>  'required'
         ]);
