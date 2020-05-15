@@ -3,7 +3,7 @@ name: PIS server
 on:
   push:
     branches:
-      - release/*
+      - master
 
 jobs:
   build:
@@ -15,6 +15,7 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: pis-ideaserv/server
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
         registry: docker.pkg.github.com
         tag_names: true
