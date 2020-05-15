@@ -3,9 +3,6 @@ name: PIS server
 on:    
   release:
       types: [published]
-  push:
-    branches:
-      - master
 
 jobs:
   build:
