@@ -1,6 +1,8 @@
 name: PIS server
 
-on:
+on:    
+  release:
+      types: [published]
   push:
     branches:
       - master
