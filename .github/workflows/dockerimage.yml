@@ -17,7 +17,7 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: pis-ideaserv/server
-        username: ${{ secrets.USERNAME }}
+        username: ${{ github.actor }}
         password: ${{ secrets.PASSWORD }}
         registry: docker.pkg.github.com
         tag_names: true
