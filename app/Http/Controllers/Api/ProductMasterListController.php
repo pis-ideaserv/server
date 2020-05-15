@@ -11,6 +11,8 @@ use App\Helpers\Utils;
 use Status;
 use App\Models\Category;
 use App\Imports\ExcelSheet;
+use App\Models\Logs;
+use App\Http\Resources\SnapshotResource;
 
 
 class ProductMasterListController extends Controller
@@ -19,25 +21,26 @@ class ProductMasterListController extends Controller
 
         if($request->filter){
             $filt = json_decode($request->filter);
-
             if(!is_object($filt)){
                 return [
                     "status" => false,
                     "errors" => "Filter must be an object"
                 ];
             }
+            // dd($filt)
 
-            $filter = [
-                'product_code'          =>  property_exists($filt,$filt->product_code) ? $filt->product_code : null,
-                'product_name'          =>  property_exists($filt,$filt->product_name) ? $filt->product_name : null,
-                'category'              =>  property_exists($filt,$filt->category) ? $filt->category : null
-            ];
+            // $filter = [
+            //     'product_code'          =>  property_exists($filt,$filt['product_code']) ? $filt['product_code'] : null,
+            //     'product_name'          =>  property_exists($filt,$filt['product_name']) ? $filt['product_name'] : null,
+            //     'category'              =>  property_exists($filt,$filt['category']) ? $filt['category'] : null
+            // ];
+
 
 
             $where = [];
 
-            foreach ($filter as $key => $value) {
-                if($value != null){
+            foreach ($filt as $key => $value) {
+                if($value->key != null){
                     switch($value->filter){
                         case "iet" :
                             if($key == "category"){
@@ -87,8 +90,6 @@ class ProductMasterListController extends Controller
             }
 
             $per_page = $request->per_page != null ? (int)$request->per_page : 10;
-
-
             return PMF::collection(
                 PF::select('product_master_list.*')
                     ->leftJoin('category as cat','product_master_list.category','=','cat.id')
@@ -105,14 +106,21 @@ class ProductMasterListController extends Controller
             return PMF::collection($query);
         }
 
-        if($request->per_page != null){
+        if($request->snapshot != null && is_numeric($request->snapshot)) {
+            $id = (int)$request->snapshot;
+            $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
+            $log = Logs::orderBy('updated_at', 'desc')->first();
 
-            $per_page = (int)$request->per_page;
-
-    	   return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate($per_page));
+            return SnapshotResource::collection(
+                Logs::where('id','>',$id)
+                    ->where('target','=','ProductMasterList')
+                    ->paginate($per_page)
+            )->additional(['snapshot' => $log !== null ? $log->id : 0]);
         }
 
-        return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate(10));
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+        $log = Logs::orderBy('updated_at', 'desc')->first();
+        return PMF::collection(PF::orderBy('updated_at', 'desc')->paginate($per_page))->additional(['snapshot' => $log !== null ? $log->id : 0]);
     }
 
     public function show($id){
@@ -120,166 +128,31 @@ class ProductMasterListController extends Controller
     }
 
     public function store(Request $request){
-    	// if(!$request->hasFile('file')){
-    		$validator = Validator::make($request->all(), [
-                'product_code'                 	=>  'required|unique:product_master_list,product_code',
-                'product_name'                  =>  'required',
-                'category'           			=>  'required',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'product_code'                 	=>  'required|unique:product_master_list,product_code',
+            'product_name'                  =>  'required',
+            'category'           			=>  'required',
+        ]);
 
-    		if ($validator->fails()){
-                $a = $validator->errors()->toArray();
+        if ($validator->fails()){
+            $a = $validator->errors()->toArray();
 
-                return [
-                    "status" => false,
-                    "errors" => Utils::RemakeArray($a)
-                ];
-            }
-
-
-           	$pa = new PF();
-           	$pa->product_code = $request->product_code;
-           	$pa->product_name = $request->product_name;
-           	$pa->category = $request->category;
-           	$pa->save();
-
-           	return response()->json([
-                "message" => "Product Master List successfully created",
-            ]);
-
-    	// }else{
-        //     ini_set('max_execution_time', 0);
-            
-        //     $column = 3;
-        //     $array = [];
-
-        //     $validator = Validator::make($request->all(),[
-        //         'file'      =>      'required|file|max:2000|mimes:xlsx,xls',
-        //     ]);
-
-        //     if ($validator->fails()){
-        //         $a = $validator->errors()->toArray();
-
-        //         return response()->json([
-        //             "errors" => Utils::RemakeArray($a)
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
+            return [
+                "status" => false,
+                "errors" => Utils::RemakeArray($a)
+            ];
+        }
 
 
-        //     //process excel
-        //     $a = (new ExcelSheet)->toCollection($request->file('file'));
+        $pa = new PF();
+        $pa->product_code = $request->product_code;
+        $pa->product_name = $request->product_name;
+        $pa->category = $request->category;
+        $pa->save();
 
-        //     //check format if empty
-        //     if(sizeof($a->toArray()[0]) < 2){
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet file is empty!!",
-        //             ]
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     //check column format
-        //     for($i=1;$i<sizeof($a->toArray()[0]);$i++){
-
-        //         $row = $a->toArray()[0][$i];
-                
-        //         for($y=0;$y<sizeof($row);$y++){
-        //             if($y+1 > $column && $row[$y] != null){
-        //                 return response()->json([
-        //                     'errors' => [
-        //                         "message" => "Sheet column format is invalid!!",
-        //                     ]   
-        //                 ],Status::HTTP_NOT_ACCEPTABLE);
-        //             }
-        //         }
-
-
-        //         //this is the end of loop if all column in a row is null
-        //         if($row[0] == null && $row[1] == null && $row[2] == null){
-        //             break;
-        //         }
-
-        //         //if true file is valid
-        //         if( $row[0] != null && $row[1] != null && $row[2] != null){
-
-        //             array_push($array,[
-        //                 'product_code'      => $row[0],
-        //                 'product_name'      => $row[1],
-        //                 'category'          => $row[2],
-        //             ]);
-        //             continue;
-        //         }
-
-        //         return response()->json([
-        //             'errors' => [
-        //                 "message" => "Sheet column format is invalid!!",
-        //             ]   
-        //         ],Status::HTTP_NOT_ACCEPTABLE);
-        //     }
-
-
-        //     // dd($array);
-        //     //save it
-
-        //     $error = [];
-        //     $success = [];
-
-        //     foreach ($array as $sheet) {
-
-        //         //check for existinf product code
-        //         $product_code = PF::where('product_code','=',$sheet['product_code'])->get();
-
-        //         if(sizeof($product_code) != 0){
-        //             array_push($error, [
-        //                 'data'      => [
-        //                     'product_code'                  => $sheet['product_code'],
-        //                     'product_name'                  => $sheet['product_name'],
-        //                     'category'                  => $sheet['category'],
-        //                 ],
-        //                 'message'   => 'Product code '. $sheet['product_code'] .' already exist!!!',
-        //             ]);
-        //             continue;
-        //         }
-
-
-        //         //check for category if exist and create if it doesnt ;
-        //         $category_code = Category::where('name','=',$sheet['category'])->get();
-        //         $category = 0;
-
-        //         if(sizeof($category_code) == 0){
-        //             $a = new Category();
-        //             $a->name = $sheet['category'];
-        //             $a->save();
-        //             $category = $a->id;
-        //         }else{
-        //             $category = $category_code[0]->id;
-        //         }
-
-
-
-
-        //         $b = new PF();
-        //         $b->product_code  = $sheet['product_code'];
-        //         $b->product_name  = $sheet['product_name'];
-        //         $b->category = $category;
-        //         $b->save();
-
-        //         array_push($success, 
-        //             [
-        //                 'product_code'                  => $sheet['product_code'],
-        //                 'product_name'                  => $sheet['product_name'],
-        //                 'category'                      => $sheet['category'],
-        //             ]
-        //         );
-        //     }
-
-        //     return response()->json([
-        //             'errors' => $error,
-        //             'success'=> $success
-        //     ]);
-
-        // }
+        return response()->json([
+            "message" => "Product Master List successfully created",
+        ]);
     }
 
     public function update(Request $request, $id){

@@ -16,17 +16,16 @@ use Illuminate\Validation\Rule;
 class NotificationController extends Controller{
 
 	public function __construct(){
-		$this->middleware('adminOnlyPermission');
+		// $this->middleware('adminOnlyPermission');
 	}
 	
 	public function index(Request $request){
-		$per_page = 10;
 
-		if($request->per_page){
-			$per_page = (int)$per_page;
-		}
-
-		return NotificationResource::collection(Notification::where('user','=',Auth::user()->id)->paginate($per_page));
+		return NotificationResource::collection(
+			Notification::where('user','=',Auth::user()->id)
+						->orderBy('updated_at', 'desc')
+						->paginate($request->per_page != null ? (int)$request->per_page : 10)
+		);
 	}
 
 	public function show($id){
@@ -47,36 +46,20 @@ class NotificationController extends Controller{
 				"status" => false,
                 "errors" => Utils::RemakeArray($a)
             ];
-        }
-
-
+		}
+		
 		$notify = new Notification();
 		$notify->user = Auth::user()->id;
 		$notify->type = $request->type;
-		$notify->status = "processing";
+		$notify->status = "queue";
 		$notify->filename = $request->filename;
 		$notify->save();
 
 		$path = exec("realpath ../artisan");
-		$command = 'php '.$path.' parse:'.$request->type.' '.$notify->id.' '.Auth::user()->id;
+		$command = 'php '.$path.' process:uploads';
 
 		shell_exec("nohup ".$command." > /dev/null 2>&1 &");
-		// shell_exec("nohup find / >> /dev/null 2>&1 &");
-		// // dd($a);
-
-		// switch($request->type){
-		// 	case "product" :
-
-		// 		break;
-		// 	case "masterfile" :
-		// 		break;
-		// 	case "supplier" :
-		// 		break;	
-		// }
-
-
-		// Artisan::queue("parse:".$request->type." ".$notify->id.' '.Auth::user()->id);
-
+		
 		return [
 			"message" => "success"
 		];

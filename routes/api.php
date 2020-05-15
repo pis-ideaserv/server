@@ -163,6 +163,7 @@ Route::group(['namespace' => 'Api'], function () {
                 'parameters' => ['user' => 'user_id']
             ]
         );
+        Route::get('/file-log/{filename}','FileLogController@show');
     });
 
 

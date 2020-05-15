@@ -10,6 +10,8 @@ use App\Helpers\Utils;
 use Validator;
 use Status;
 use DB;
+use App\Models\Logs;
+use App\Http\Resources\SnapshotResource;
 
 class UserController extends Controller
 {
@@ -40,7 +42,7 @@ class UserController extends Controller
             $where = [];
             
             foreach ($filter as $key => $value) {
-                if($value != null){
+                if($value->key){
                     if($key == 'level' || $key == 'activated'){
                         if($key == 'activated'){
                             if($value->key == 2){
@@ -83,9 +85,22 @@ class UserController extends Controller
             return UserResource::collection($user->paginate($per_page));
         }
 
+        if($request->snapshot != null && is_numeric($request->snapshot)) {
+            $id = (int)$request->snapshot;
+            $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
+            $log = Logs::orderBy('updated_at', 'desc')->first();
+
+            return SnapshotResource::collection(
+                Logs::where('id','>',$id)
+                    ->where('target','=','User')
+                    ->orderBy('updated_at', 'desc')
+                    ->paginate($per_page)
+            )->additional(['snapshot' => $log !== null ? $log->id : 0]);
+        }
+
         $per_page = $request->per_page != null ? (int)$request->per_page : 10;
-        
-        return UserResource::collection(User::orderBy('updated_at', 'desc')->paginate($per_page));
+        $log = Logs::orderBy('updated_at', 'desc')->first();
+        return UserResource::collection(User::orderBy('updated_at', 'desc')->paginate($per_page))->additional(['snapshot' => $log !== null ? $log->id : 0]);
     }
 
 

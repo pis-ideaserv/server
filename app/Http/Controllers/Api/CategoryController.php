@@ -9,6 +9,7 @@ use App\Http\Resources\Category as CategoryResources;
 use Validator;
 use App\Helpers\Utils;
 use App\Models\Logs;
+use App\Http\Resources\SnapshotResource;
 use Status;
 
 class CategoryController extends Controller
@@ -20,13 +21,21 @@ class CategoryController extends Controller
             return CategoryResources::collection($query);
         }
 
-        if($request->per_page != null) {
-            $per_page = (int)$request->per_page;
-            return CategoryResources::collection(Category::orderBy('updated_at', 'desc')->paginate($per_page));
-        }else{
-            return CategoryResources::collection(Category::orderBy('updated_at', 'desc')->paginate(10));
+        if($request->snapshot != null && is_numeric($request->snapshot)) {
+            $id = (int)$request->snapshot;
+            $per_page = $request->per_page != null ? (int)$request->per_page : 1000;
+            $log = Logs::orderBy('updated_at', 'desc')->first();
+            
+            return SnapshotResource::collection(
+                Logs::where('id','>',$id)
+                    ->where('target','=','Category')
+                    ->paginate($per_page)
+            )->additional(['snapshot' => $log !== null ? $log->id : 0]);
         }
-    	
+
+        $per_page = $request->per_page != null ? (int)$request->per_page : 10;
+        $log = Logs::orderBy('updated_at', 'desc')->first();
+        return CategoryResources::collection(Category::orderBy('updated_at', 'desc')->paginate($per_page))->additional(['snapshot' => $log !== null ? $log->id : 0]);
     }
 
     public function show($id){
