@@ -16,7 +16,7 @@ jobs:
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
-        name: pis-ideaserv/server/PIS-server
+        name: pis-ideaserv/server/pisserver
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         registry: docker.pkg.github.com
