@@ -6,24 +6,17 @@ RUN 	apt-get update -y && \
 	apt-get upgrade -y && \
 	apt-get dist-upgrade -y && \
 	apt-get install software-properties-common nginx php7.2 php7.2-fpm php7.2-curl php7.2-ldap php7.2-mysql php7.2-gd \
-	php7.2-xml php7.2-mbstring php7.2-zip php7.2-bcmath mysql-client composer npm nodejs curl wget redis-server -y
+	php7.2-xml php7.2-mbstring php7.2-zip php7.2-bcmath mysql-client composer npm nodejs curl wget redis-server nano htop -y
 RUN 	apt-get purge apache2 apache* -y
-RUN 	npm cache clean -f
-RUN 	npm install -g npm
-RUN 	npm install -g n
-RUN 	n stable
 COPY . /home/
 COPY Docker/config.nginx /etc/nginx/sites-enabled/config.nginx
-COPY Docker/config.env /home/server/.env
-RUN mkdir /home/server/storage/app/temp
+COPY Docker/config.env /home/.env
+RUN mkdir /home/storage/app/temp
 RUN chmod +x /home/Docker/start
+RUN chmod +x /home/Docker/nohup
 RUN cp -f /home/Docker/redis.conf /etc/redis/
-RUN composer install -d /home/server
-RUN npm install --prefix /home/client
-RUN php /home/server/artisan key:generate
-RUN php /home/server/artisan jwt:secret
-RUN npm run build --prefix /home/client
-RUN cp -rf /home/client/build/* /home/server/public/
-RUN mv /home/server/public/index.html /home/server/resources/views/index.blade.php
+RUN composer install -d /home/
+RUN php /home/artisan key:generate
+RUN php /home/artisan jwt:secret
 RUN chmod 777 -R /home/
-CMD /home/start
+CMD /home/Docker/start
