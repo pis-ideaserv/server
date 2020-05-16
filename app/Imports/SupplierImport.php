@@ -48,7 +48,7 @@ class SupplierImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadi
     }
 
     public function chunkSize(): int{
-        return 1000;
+        return 10;
     }
 
     public function rules(): array

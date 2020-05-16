@@ -108,7 +108,7 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 10;
     }
 
     public function rules(): array
