@@ -9,8 +9,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses:  actions/checkout@master
+    - name: Publish to Registry (Latest Release)
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: pis-ideaserv/server/pis-server:latest
+        username: ${{ github.actor }}
+        password: ${{ secrets.TOKEN }}
+        registry: docker.pkg.github.com
     - uses: actions/checkout@master
-    - name: Publish to Registry
+    - name: Publish to Registry (Version Release)
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: pis-ideaserv/server/pis-server
