@@ -60,7 +60,7 @@ class MasterFileImport implements ToModel,WithChunkReading, ShouldQueue, WithHea
     }
 
     public function chunkSize(): int{
-        return 10;
+        return 1000;
     }
 
     public function rules(): array{

@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use ExcelDate;
 use App\Models\Notification;
 use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\ProductMasterList;
 use App\Models\FileLog;
 use Illuminate\Validation\Rule;
 use App\Models\Logs;
@@ -100,7 +102,6 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
                 unset($row[$key]);
             }
         }
-
         return $row;
     }
 
@@ -108,7 +109,7 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
 
     public function chunkSize(): int
     {
-        return 10;
+        return 1000;
     }
 
     public function rules(): array
@@ -141,8 +142,8 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
     public function model(array $collection)
     {
         $productsVar = [
-            'supplier'                      => $collection['supplier_code'],
-            'product'                       => $collection['product_code'],
+            'supplier'                      => Supplier::where('supplier_code','=',$collection['supplier_code'])->get()->first()->id,
+            'product'                       => ProductMasterList::where('product_code','=',$collection['product_code'])->get()->first()->id,
             'delivery_date'                 => $collection['delivery_date'],
             'reference_delivery_document'   => $collection['reference_delivery_document'],
             'serial_number'                 => $collection['serial_number'],

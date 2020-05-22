@@ -1,6 +1,5 @@
 #!/bin/bash
-service nginx start
+#service nginx start
 service php7.2-fpm start
 redis-server --daemonize yes
-#nginx -g "daemon off;"
-nohup /home/Docker/nohup >/dev/null 2>&1
+nginx -g "daemon off;"

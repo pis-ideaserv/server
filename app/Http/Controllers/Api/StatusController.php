@@ -5,14 +5,20 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\User;
+use App\Models\Supplier;
 
 class StatusController extends Controller
 {
     public function index(){
-        $product = Product::leftJoin('status','status.id','=','product.status');
+        
 
         $counter = [
-            'total' => $product->count(),
+            'total' => [
+                'supplier' => Supplier::all()->count(),
+                'product'  => Product::all()->count(),
+                'user'     => User::all()->count()
+            ],
             'status' => [
                 'New' => Product::leftJoin('status','status.id','=','product.status')->where('status.name','=','New')->count(),
                 'Replaced' => Product::leftJoin('status','status.id','=','product.status')->where('status.name','=','Replaced')->count(),

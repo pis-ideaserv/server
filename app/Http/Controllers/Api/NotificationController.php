@@ -58,7 +58,10 @@ class NotificationController extends Controller{
 		$path = exec("realpath ../artisan");
 		$command = 'php '.$path.' process:uploads';
 
-		shell_exec("nohup ".$command." > /dev/null 2>&1 &");
+		$process = shell_exec("ps aux | grep 'process:uploads' | grep -v grep | awk '{print $2}'");
+        if($process == null){
+            shell_exec("nohup ".$command." > /dev/null 2>&1 &");
+        }
 		
 		return [
 			"message" => "success"

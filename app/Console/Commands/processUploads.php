@@ -73,17 +73,34 @@ class processUploads extends Command
 
         $processing = Notification::where('status','=','processing');
         $queue = Notification::where('status','=','queue');
-        if($processing->count() == 0 && $queue->count() != 0){
+        while($processing->count() == 0 && $queue->count() != 0){
             
             $filename = $queue->first()->filename;
             $id       = $queue->first()->user;
             $type     = $queue->first()->type;
+            $pathinfo = pathinfo(storage_path()."/app/temp/".$filename);
+            $newname = $pathinfo["filename"].".csv";
+            $notification = Notification::where('filename','=',$filename);
+            
+            shell_exec("ssconvert ".storage_path()."/app/temp/".$filename." ".storage_path()."/app/temp/".$newname);
 
-            //get header on first sheet and filter to remove empty values
-            $headings = array_filter((new HeadingRowImport)->toArray(storage_path()."/app/temp/".$filename)[0][0]);
+            // Storage::delete('temp/'.$filename);
+            if(!file_exists(storage_path()."/app/temp/".$newname)){
+                $notification->update([
+                    'result' => json_encode(['message' => 'Something went wrong.']),
+                    'status' => 'failed'
+                ]);
+
+                $processing = Notification::where('status','=','processing');
+                $queue = Notification::where('status','=','queue');
+                continue;
+            }
             
 
-            $notification = Notification::where('filename','=',$filename);
+            //get header on first sheet and filter to remove empty values
+            $headings = array_filter((new HeadingRowImport)->toArray(storage_path()."/app/temp/".$newname)[0][0]);
+
+            
             $notification->update(['status' => 'processing']);
 
             switch($type){
@@ -97,7 +114,7 @@ class processUploads extends Command
                     }
 
                     $a = new ProductImport($id,$filename);
-                    $a->queue(storage_path()."/app/temp/".$filename);
+                    $a->queue(storage_path()."/app/temp/".$newname);
                     break;
                 case "masterfile":
                     if(sizeof(array_diff($masterFileHeader,$headings)) != 0) {
@@ -108,7 +125,7 @@ class processUploads extends Command
                         break;
                     }
                     $a = new MasterFileImport($id,$filename);
-                    $a->queue(storage_path()."/app/temp/".$filename);
+                    $a->queue(storage_path()."/app/temp/".$newname);
                     break;
                 case "supplier":
                     if(sizeof(array_diff($supplierHeader,$headings)) != 0){
@@ -119,7 +136,7 @@ class processUploads extends Command
                         break;
                     }
                     $a = new SupplierImport($id,$filename);
-                    $a->queue(storage_path()."/app/temp/".$filename);
+                    $a->queue(storage_path()."/app/temp/".$newname);
                     break;
             }
 
@@ -129,7 +146,9 @@ class processUploads extends Command
                     'status' => 'done'
                 ]);
             }
-            Storage::delete('temp/'.$filename);
+            $processing = Notification::where('status','=','processing');
+            $queue = Notification::where('status','=','queue');
+            Storage::delete('temp/'.$newname);
         }
         return;
     }
