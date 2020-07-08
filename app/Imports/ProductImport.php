@@ -21,6 +21,7 @@ use App\Models\ProductMasterList;
 use App\Models\FileLog;
 use Illuminate\Validation\Rule;
 use App\Models\Logs;
+use App\Models\Status;
 use DB;
 
 
@@ -142,8 +143,8 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
     public function model(array $collection)
     {
         $productsVar = [
-            'supplier'                      => Supplier::where('supplier_code','=',$collection['supplier_code'])->get()->first()->id,
-            'product'                       => ProductMasterList::where('product_code','=',$collection['product_code'])->get()->first()->id,
+            'supplier'                      => Supplier::where('supplier_code','=',$collection['supplier_code'])->get()->first(),
+            'product'                       => ProductMasterList::where('product_code','=',$collection['product_code'])->get()->first(),
             'delivery_date'                 => $collection['delivery_date'],
             'reference_delivery_document'   => $collection['reference_delivery_document'],
             'serial_number'                 => $collection['serial_number'],
@@ -153,7 +154,7 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
             'warranty_start'                => $collection['warranty_start'],
             'warranty_end'                  => $collection['warranty_end'],
             'remarks'                       => $collection['remarks'],
-            'status'                        => $collection['status'],
+            'status'                        => Status::where('name','=',$collection['status'])->get()->first()->toArray(),
             'created_at'                    => date('Y-m-d H:i:s'),
             'updated_at'                    => date('Y-m-d H:i:s')
         ];
