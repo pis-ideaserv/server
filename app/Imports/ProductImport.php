@@ -143,8 +143,8 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
     public function model(array $collection)
     {
         $productsVar = [
-            'supplier'                      => Supplier::where('supplier_code','=',$collection['supplier_code'])->get()->first(),
-            'product'                       => ProductMasterList::where('product_code','=',$collection['product_code'])->get()->first(),
+            'supplier'                      => Supplier::where('supplier_code','=',$collection['supplier_code'])->get()->first()->toArray(),
+            'product'                       => ProductMasterList::where('product_code','=',$collection['product_code'])->get()->first()->toArray(),
             'delivery_date'                 => $collection['delivery_date'],
             'reference_delivery_document'   => $collection['reference_delivery_document'],
             'serial_number'                 => $collection['serial_number'],
