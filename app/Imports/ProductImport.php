@@ -154,7 +154,7 @@ class ProductImport implements ToModel,WithChunkReading, ShouldQueue, WithHeadin
             'warranty_start'                => $collection['warranty_start'],
             'warranty_end'                  => $collection['warranty_end'],
             'remarks'                       => $collection['remarks'],
-            'status'                        => Status::where('name','=',$collection['status'])->get()->first()->toArray(),
+            'status'                        => Status::where('id','=',$collection['status'])->get()->first()->toArray(),
             'created_at'                    => date('Y-m-d H:i:s'),
             'updated_at'                    => date('Y-m-d H:i:s')
         ];
